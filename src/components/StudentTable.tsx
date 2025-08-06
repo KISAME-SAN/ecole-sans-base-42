@@ -147,37 +147,41 @@ export default function StudentTable({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Nom complet</TableHead>
-                  <TableHead>N° étudiant</TableHead>
-                  <TableHead>Classe</TableHead>
-                  <TableHead>Date de naissance</TableHead>
-                  <TableHead>Lieu de naissance</TableHead>
-                  <TableHead>Téléphone parent</TableHead>
-                  <TableHead>Genre</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="whitespace-nowrap">ID</TableHead>
+                  <TableHead className="whitespace-nowrap">Prénom</TableHead>
+                  <TableHead className="whitespace-nowrap">Nom</TableHead>
+                  <TableHead className="whitespace-nowrap">N° étudiant</TableHead>
+                  <TableHead className="whitespace-nowrap">Classe</TableHead>
+                  <TableHead className="whitespace-nowrap">Date de naissance</TableHead>
+                  <TableHead className="whitespace-nowrap">Lieu de naissance</TableHead>
+                  <TableHead className="whitespace-nowrap">Téléphone parent</TableHead>
+                  <TableHead className="whitespace-nowrap">Genre</TableHead>
+                  <TableHead className="whitespace-nowrap">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredStudents.map((student) => (
                   <TableRow key={student.id}>
-                    <TableCell className="font-bold text-primary">
-                      #{student.autoId.toString().padStart(3, '0')}
+                    <TableCell className="font-bold text-primary whitespace-nowrap">
+                      {student.autoId.toString().padStart(3, '0')}
                     </TableCell>
-                    <TableCell className="font-medium">
-                      {student.firstName} {student.lastName}
+                    <TableCell className="font-medium whitespace-nowrap">
+                      {student.firstName}
                     </TableCell>
-                    <TableCell>{student.studentNumber}</TableCell>
-                    <TableCell>{getClassName(student.classId)}</TableCell>
-                    <TableCell>{student.birthDate}</TableCell>
-                    <TableCell>{student.birthPlace}</TableCell>
-                    <TableCell>{student.parentPhone}</TableCell>
-                    <TableCell>
+                    <TableCell className="font-medium whitespace-nowrap">
+                      {student.lastName}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">{student.studentNumber}</TableCell>
+                    <TableCell className="whitespace-nowrap">{getClassName(student.classId)}</TableCell>
+                    <TableCell className="whitespace-nowrap">{student.birthDate}</TableCell>
+                    <TableCell className="whitespace-nowrap">{student.birthPlace}</TableCell>
+                    <TableCell className="whitespace-nowrap">{student.parentPhone}</TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <Badge variant={student.gender === 'male' ? 'default' : 'secondary'}>
                         {student.gender === 'male' ? 'Garçon' : 'Fille'}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
