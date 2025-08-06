@@ -136,7 +136,7 @@ export default function StudentTable({
         <CardHeader>
           <CardTitle>Liste des étudiants ({filteredStudents.length})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {filteredStudents.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {searchTerm || selectedClass !== "all" 
@@ -144,87 +144,91 @@ export default function StudentTable({
                 : "Aucun étudiant inscrit"}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="whitespace-nowrap">ID</TableHead>
-                  <TableHead className="whitespace-nowrap">Prénom</TableHead>
-                  <TableHead className="whitespace-nowrap">Nom</TableHead>
-                  <TableHead className="whitespace-nowrap">N° étudiant</TableHead>
-                  <TableHead className="whitespace-nowrap">Classe</TableHead>
-                  <TableHead className="whitespace-nowrap">Date de naissance</TableHead>
-                  <TableHead className="whitespace-nowrap">Lieu de naissance</TableHead>
-                  <TableHead className="whitespace-nowrap">Téléphone parent</TableHead>
-                  <TableHead className="whitespace-nowrap">Genre</TableHead>
-                  <TableHead className="whitespace-nowrap">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredStudents.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-bold text-primary whitespace-nowrap">
-                      {student.autoId.toString().padStart(3, '0')}
-                    </TableCell>
-                    <TableCell className="font-medium whitespace-nowrap">
-                      {student.firstName}
-                    </TableCell>
-                    <TableCell className="font-medium whitespace-nowrap">
-                      {student.lastName}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">{student.studentNumber}</TableCell>
-                    <TableCell className="whitespace-nowrap">{getClassName(student.classId)}</TableCell>
-                    <TableCell className="whitespace-nowrap">{student.birthDate}</TableCell>
-                    <TableCell className="whitespace-nowrap">{student.birthPlace}</TableCell>
-                    <TableCell className="whitespace-nowrap">{student.parentPhone}</TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <Badge variant={student.gender === 'male' ? 'default' : 'secondary'}>
-                        {student.gender === 'male' ? 'Garçon' : 'Fille'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(student)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
+            <div className="border rounded-lg">
+              <div className="max-h-[600px] overflow-auto">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-background z-10">
+                    <TableRow>
+                      <TableHead className="whitespace-nowrap border-b bg-background">ID</TableHead>
+                      <TableHead className="whitespace-nowrap border-b bg-background">Prénom</TableHead>
+                      <TableHead className="whitespace-nowrap border-b bg-background">Nom</TableHead>
+                      <TableHead className="whitespace-nowrap border-b bg-background">N° étudiant</TableHead>
+                      <TableHead className="whitespace-nowrap border-b bg-background">Classe</TableHead>
+                      <TableHead className="whitespace-nowrap border-b bg-background">Date de naissance</TableHead>
+                      <TableHead className="whitespace-nowrap border-b bg-background">Lieu de naissance</TableHead>
+                      <TableHead className="whitespace-nowrap border-b bg-background">Téléphone parent</TableHead>
+                      <TableHead className="whitespace-nowrap border-b bg-background">Genre</TableHead>
+                      <TableHead className="whitespace-nowrap border-b bg-background">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredStudents.map((student) => (
+                      <TableRow key={student.id}>
+                        <TableCell className="font-bold text-primary whitespace-nowrap">
+                          {student.autoId.toString().padStart(3, '0')}
+                        </TableCell>
+                        <TableCell className="font-medium whitespace-nowrap">
+                          {student.firstName}
+                        </TableCell>
+                        <TableCell className="font-medium whitespace-nowrap">
+                          {student.lastName}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">{student.studentNumber}</TableCell>
+                        <TableCell className="whitespace-nowrap">{getClassName(student.classId)}</TableCell>
+                        <TableCell className="whitespace-nowrap">{student.birthDate}</TableCell>
+                        <TableCell className="whitespace-nowrap">{student.birthPlace}</TableCell>
+                        <TableCell className="whitespace-nowrap">{student.parentPhone}</TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Badge variant={student.gender === 'male' ? 'default' : 'secondary'}>
+                            {student.gender === 'male' ? 'Garçon' : 'Fille'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <div className="flex gap-2">
                             <Button
-                              variant="destructive"
+                              variant="outline"
                               size="sm"
+                              onClick={() => handleEdit(student)}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Edit className="h-4 w-4" />
                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Êtes-vous sûr de vouloir supprimer l'étudiant {student.firstName} {student.lastName} ? 
-                                Cette action est irréversible.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={() => onDeleteStudent(student.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Supprimer
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                            
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Êtes-vous sûr de vouloir supprimer l'étudiant {student.firstName} {student.lastName} ? 
+                                    Cette action est irréversible.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => onDeleteStudent(student.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Supprimer
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
