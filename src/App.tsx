@@ -17,6 +17,7 @@ import TeacherRegistration from "./pages/TeacherRegistration";
 import TeacherManagement from "./pages/TeacherManagement";
 import GradeManagement from "./pages/GradeManagement";
 import AttendanceManagement from "./pages/AttendanceManagement";
+import PaymentManagement from "./pages/PaymentManagement";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
@@ -95,6 +96,14 @@ const AppContent = () => {
           } />
           <Route path="/attendance" element={
             <AttendanceManagement 
+              classes={schoolData.classes}
+              students={schoolData.students}
+              teachers={teacherData.teachers}
+              getStudentsByClass={schoolData.getStudentsByClass}
+            />
+          } />
+          <Route path="/payments" element={
+            <PaymentManagement 
               classes={schoolData.classes}
               students={schoolData.students}
               teachers={teacherData.teachers}

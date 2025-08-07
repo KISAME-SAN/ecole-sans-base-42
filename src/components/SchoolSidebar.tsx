@@ -1,5 +1,5 @@
 
-import { UserPlus, Users, GraduationCap, BarChart3, UserCheck, UsersRound, BookOpen, ClipboardCheck } from "lucide-react";
+import { UserPlus, Users, GraduationCap, BarChart3, UserCheck, UsersRound, BookOpen, ClipboardCheck, CreditCard } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -54,6 +54,11 @@ const navigationItems = [
     title: "Gestion des présences",
     url: "/attendance",
     icon: ClipboardCheck,
+  },
+  {
+    title: "Gestion des paiements",
+    url: "/payments",
+    icon: CreditCard,
   },
 ];
 
