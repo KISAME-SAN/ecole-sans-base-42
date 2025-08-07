@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, CreditCard, Settings } from "lucide-react";
+import { Users, UserCheck } from "lucide-react";
 import { SchoolClass, Student } from "@/types/school";
 import { Teacher } from "@/types/teacher";
-import StudentPaymentManager from "@/components/StudentPaymentManager";
-import PaymentConfiguration from "@/components/PaymentConfiguration";
+import StudentPayments from "@/pages/StudentPayments";
 
 interface PaymentManagementProps {
   classes: SchoolClass[];
@@ -20,35 +19,21 @@ export default function PaymentManagement({
   teachers, 
   getStudentsByClass 
 }: PaymentManagementProps) {
-  const [paymentType, setPaymentType] = useState<'student' | 'teacher' | 'config' | ''>('');
+  const [paymentType, setPaymentType] = useState<'student' | 'teacher' | ''>('');
 
-  const handlePaymentTypeSelect = (type: 'student' | 'teacher' | 'config') => {
+  const handlePaymentTypeSelect = (type: 'student' | 'teacher') => {
     setPaymentType(type);
   };
-
-  // Vue de configuration des paiements
-  if (paymentType === 'config') {
-    return (
-      <div className="container mx-auto p-6">
-        <PaymentConfiguration
-          classes={classes}
-          onBack={() => setPaymentType('')}
-        />
-      </div>
-    );
-  }
 
   // Vue de gestion des paiements des étudiants
   if (paymentType === 'student') {
     return (
-      <div className="container mx-auto p-6">
-        <StudentPaymentManager
-          classes={classes}
-          students={students}
-          getStudentsByClass={getStudentsByClass}
-          onBack={() => setPaymentType('')}
-        />
-      </div>
+      <StudentPayments
+        classes={classes}
+        students={students}
+        getStudentsByClass={getStudentsByClass}
+        onBack={() => setPaymentType('')}
+      />
     );
   }
 
@@ -94,7 +79,7 @@ export default function PaymentManagement({
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
             <Button 
               variant="outline" 
               size="lg" 
@@ -117,18 +102,6 @@ export default function PaymentManagement({
               <div className="text-center">
                 <div className="text-xl font-bold text-accent">Salaires professeurs</div>
                 <div className="text-sm text-muted-foreground mt-2">Gérer les salaires du personnel</div>
-              </div>
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              onClick={() => handlePaymentTypeSelect('config')}
-              className="h-40 flex flex-col gap-4 border-2 border-orange-500/20 hover:border-orange-500 hover:bg-orange-500/5 hover:scale-105 transition-all duration-300 group"
-            >
-              <Settings className="h-16 w-16 text-orange-500 group-hover:scale-110 transition-transform" />
-              <div className="text-center">
-                <div className="text-xl font-bold text-orange-500">Configuration</div>
-                <div className="text-sm text-muted-foreground mt-2">Configurer tarifs et services</div>
               </div>
             </Button>
           </div>
