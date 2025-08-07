@@ -1,19 +1,29 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Upload, Database } from "lucide-react";
+import { Download, Upload, Database, FileText } from "lucide-react";
 import { toast } from "sonner";
-import LocalDatabaseService from '@/services/localDatabase';
+import SimpleLocalDatabaseService from '@/services/simpleLocalDatabase';
 
 export const DatabaseManager = () => {
-  const db = LocalDatabaseService.getInstance();
+  const db = SimpleLocalDatabaseService.getInstance();
 
-  const handleExportDatabase = async () => {
+  const handleExportDatabase = () => {
     try {
-      await db.downloadDatabase();
+      db.downloadDatabase();
       toast.success("Base de données exportée avec succès!");
     } catch (error) {
       toast.error("Erreur lors de l'export de la base de données");
+      console.error(error);
+    }
+  };
+
+  const handleExportDatabaseAsSQL = () => {
+    try {
+      db.downloadDatabaseAsSQL();
+      toast.success("Base de données SQL exportée avec succès!");
+    } catch (error) {
+      toast.error("Erreur lors de l'export SQL");
       console.error(error);
     }
   };
@@ -50,13 +60,22 @@ export const DatabaseManager = () => {
           variant="outline"
         >
           <Download className="mr-2 h-4 w-4" />
-          Exporter la Base de Données (.sql)
+          Exporter en JSON (.json)
+        </Button>
+        
+        <Button 
+          onClick={handleExportDatabaseAsSQL}
+          className="w-full"
+          variant="outline"
+        >
+          <FileText className="mr-2 h-4 w-4" />
+          Exporter en SQL (.sql)
         </Button>
         
         <div>
           <input
             type="file"
-            accept=".sql"
+            accept=".json"
             onChange={handleImportDatabase}
             className="hidden"
             id="import-db"
@@ -67,14 +86,15 @@ export const DatabaseManager = () => {
               variant="outline"
             >
               <Upload className="mr-2 h-4 w-4" />
-              Importer une Base de Données (.sql)
+              Importer une Base de Données (.json)
             </Button>
           </label>
         </div>
         
         <div className="text-sm text-muted-foreground">
-          <p><strong>Export:</strong> Télécharge un fichier .sql avec toutes vos données</p>
-          <p><strong>Import:</strong> Charge une base de données depuis un fichier .sql</p>
+          <p><strong>Export JSON:</strong> Format standard pour la sauvegarde</p>
+          <p><strong>Export SQL:</strong> Format compatible avec les bases de données</p>
+          <p><strong>Import:</strong> Charge des données depuis un fichier JSON</p>
         </div>
       </CardContent>
     </Card>
