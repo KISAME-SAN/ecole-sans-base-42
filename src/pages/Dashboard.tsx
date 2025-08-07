@@ -1,7 +1,9 @@
 
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, GraduationCap, BookOpen } from "lucide-react";
 import { DashboardStats } from "@/types/teacher";
+import { DatabaseManager } from "@/components/DatabaseManager";
 
 interface DashboardProps {
   stats: DashboardStats;
@@ -63,6 +65,10 @@ const Dashboard = ({ stats }: DashboardProps) => {
               </p>
             </CardContent>
           </Card>
+        </div>
+        
+        <div className="mt-8">
+          <DatabaseManager />
         </div>
       </div>
     </div>
