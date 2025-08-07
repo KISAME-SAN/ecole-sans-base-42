@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Student, SchoolClass, StudentFormData } from '@/types/school';
 import { useDatabase } from './useDatabase';
 
@@ -17,168 +17,141 @@ export const useSchoolData = () => {
   }, [isReady]);
 
   const loadClassesFromDB = () => {
-    if (!isReady || !db) return;
-    
+    // Pour l'instant, chargement depuis localStorage
     try {
-      const classesData = db.query('SELECT * FROM classes ORDER BY name');
-      setClasses(classesData);
+      const savedClasses = localStorage.getItem('school-classes');
+      if (savedClasses) {
+        const classesData = JSON.parse(savedClasses);
+        setClasses(classesData);
+      }
     } catch (error) {
       console.error('Erreur lors du chargement des classes:', error);
     }
   };
 
   const loadStudentsFromDB = () => {
-    if (!isReady || !db) return;
-    
+    // Pour l'instant, chargement depuis localStorage
     try {
-      const studentsData = db.query('SELECT * FROM students ORDER BY lastName, firstName');
-      setStudents(studentsData);
-      
-      // Calculer le prochain ID étudiant
-      const maxAutoId = studentsData.reduce((max: number, student: Student) => 
-        Math.max(max, student.autoId || 0), 0);
-      setNextStudentId(maxAutoId + 1);
+      const savedStudents = localStorage.getItem('school-students');
+      if (savedStudents) {
+        const studentsData = JSON.parse(savedStudents);
+        setStudents(studentsData);
+        
+        // Calculer le prochain ID étudiant
+        const maxAutoId = studentsData.reduce((max: number, student: Student) => 
+          Math.max(max, student.autoId || 0), 0);
+        setNextStudentId(maxAutoId + 1);
+      }
     } catch (error) {
       console.error('Erreur lors du chargement des étudiants:', error);
     }
   };
 
-  // Class management
+  // Class management - retour au localStorage temporairement
   const addClass = (className: string) => {
-    if (!isReady || !db) return '';
-    
     const newClass: SchoolClass = {
       id: Date.now().toString(),
       name: className,
       studentCount: 0
     };
     
-    try {
-      db.execute(
-        'INSERT INTO classes (id, name, studentCount) VALUES (?, ?, ?)',
-        [newClass.id, newClass.name, newClass.studentCount]
-      );
-      setClasses(prev => [...prev, newClass]);
-      return newClass.id;
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout de la classe:', error);
-      throw error;
-    }
+    setClasses(prev => {
+      const updated = [...prev, newClass];
+      localStorage.setItem('school-classes', JSON.stringify(updated));
+      return updated;
+    });
+    return newClass.id;
   };
 
   const deleteClass = (classId: string) => {
-    if (!isReady || !db) return;
-    
-    try {
-      db.execute('DELETE FROM classes WHERE id = ?', [classId]);
-      setClasses(prev => prev.filter(c => c.id !== classId));
-      setStudents(prev => prev.filter(s => s.classId !== classId));
-    } catch (error) {
-      console.error('Erreur lors de la suppression de la classe:', error);
-      throw error;
-    }
+    setClasses(prev => {
+      const updated = prev.filter(c => c.id !== classId);
+      localStorage.setItem('school-classes', JSON.stringify(updated));
+      return updated;
+    });
+    setStudents(prev => {
+      const updated = prev.filter(s => s.classId !== classId);
+      localStorage.setItem('school-students', JSON.stringify(updated));
+      return updated;
+    });
   };
 
-  // Student management
+  // Student management - retour au localStorage temporairement
   const addStudent = (studentData: StudentFormData) => {
-    if (!isReady || !db) return '';
-    
     const newStudent: Student = {
       id: Date.now().toString(),
       autoId: nextStudentId,
       ...studentData
     };
     
-    try {
-      db.execute(
-        'INSERT INTO students (id, autoId, firstName, lastName, birthDate, birthPlace, studentNumber, parentPhone, gender, classId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [newStudent.id, newStudent.autoId, newStudent.firstName, newStudent.lastName, newStudent.birthDate, newStudent.birthPlace, newStudent.studentNumber || '', newStudent.parentPhone, newStudent.gender, newStudent.classId]
-      );
+    setNextStudentId(prev => prev + 1);
+    setStudents(prev => {
+      const updated = [...prev, newStudent];
+      localStorage.setItem('school-students', JSON.stringify(updated));
       
-      setNextStudentId(prev => prev + 1);
-      setStudents(prev => [...prev, newStudent]);
-      
-      // Mettre à jour le comptage des étudiants
-      updateClassStudentCountInDB(studentData.classId);
-      
-      return newStudent.id;
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout de l\'étudiant:', error);
-      throw error;
-    }
+      // Mettre à jour le comptage immédiatement
+      setClasses(current => {
+        const updatedClasses = current.map(c => 
+          c.id === studentData.classId 
+            ? { ...c, studentCount: updated.filter(s => s.classId === c.id).length }
+            : c
+        );
+        localStorage.setItem('school-classes', JSON.stringify(updatedClasses));
+        return updatedClasses;
+      });
+      return updated;
+    });
+    return newStudent.id;
   };
 
   const updateStudent = (studentId: string, studentData: StudentFormData) => {
-    if (!isReady || !db) return;
-    
     const oldStudent = students.find(s => s.id === studentId);
-    
-    try {
-      db.execute(
-        'UPDATE students SET firstName = ?, lastName = ?, birthDate = ?, birthPlace = ?, studentNumber = ?, parentPhone = ?, gender = ?, classId = ? WHERE id = ?',
-        [studentData.firstName, studentData.lastName, studentData.birthDate, studentData.birthPlace, studentData.studentNumber, studentData.parentPhone, studentData.gender, studentData.classId, studentId]
-      );
-      
-      setStudents(prev => prev.map(s => 
+    setStudents(prev => {
+      const updated = prev.map(s => 
         s.id === studentId ? { ...s, ...studentData } : s
-      ));
+      );
+      localStorage.setItem('school-students', JSON.stringify(updated));
       
-      // Mettre à jour les comptages si la classe a changé
-      if (oldStudent && oldStudent.classId !== studentData.classId) {
-        updateClassStudentCountInDB(oldStudent.classId);
-        updateClassStudentCountInDB(studentData.classId);
-      }
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour de l\'étudiant:', error);
-      throw error;
-    }
+      // Mettre à jour les comptages
+      setClasses(current => {
+        const updatedClasses = current.map(c => ({
+          ...c,
+          studentCount: updated.filter(s => s.classId === c.id).length
+        }));
+        localStorage.setItem('school-classes', JSON.stringify(updatedClasses));
+        return updatedClasses;
+      });
+      return updated;
+    });
   };
 
   const deleteStudent = (studentId: string) => {
-    if (!isReady || !db) return;
-    
     const student = students.find(s => s.id === studentId);
-    
-    try {
-      db.execute('DELETE FROM students WHERE id = ?', [studentId]);
-      setStudents(prev => prev.filter(s => s.id !== studentId));
+    setStudents(prev => {
+      const updated = prev.filter(s => s.id !== studentId);
+      localStorage.setItem('school-students', JSON.stringify(updated));
       
-      if (student) {
-        updateClassStudentCountInDB(student.classId);
-      }
-    } catch (error) {
-      console.error('Erreur lors de la suppression de l\'étudiant:', error);
-      throw error;
-    }
-  };
-
-  const updateClassStudentCountInDB = (classId: string) => {
-    if (!isReady || !db) return;
-    
-    try {
-      const count = db.queryOne('SELECT COUNT(*) as count FROM students WHERE classId = ?', [classId]);
-      db.execute('UPDATE classes SET studentCount = ? WHERE id = ?', [count.count, classId]);
-      
-      setClasses(prev => prev.map(c => 
-        c.id === classId ? { ...c, studentCount: count.count } : c
-      ));
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du comptage:', error);
-    }
+      // Mettre à jour les comptages
+      setClasses(current => {
+        const updatedClasses = current.map(c => ({
+          ...c,
+          studentCount: updated.filter(s => s.classId === c.id).length
+        }));
+        localStorage.setItem('school-classes', JSON.stringify(updatedClasses));
+        return updatedClasses;
+      });
+      return updated;
+    });
   };
 
   const updateClassName = (classId: string, newName: string) => {
-    if (!isReady || !db) return;
-    
-    try {
-      db.execute('UPDATE classes SET name = ? WHERE id = ?', [newName, classId]);
-      setClasses(prev => prev.map(c => 
+    setClasses(prev => {
+      const updated = prev.map(c => 
         c.id === classId ? { ...c, name: newName } : c
-      ));
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du nom de classe:', error);
-      throw error;
-    }
+      );
+      localStorage.setItem('school-classes', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const getStudentsByClass = (classId: string) => {
