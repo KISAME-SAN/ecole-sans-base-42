@@ -10,6 +10,7 @@ import { SchoolSidebar } from "./components/SchoolSidebar";
 import { useSchoolData } from "./hooks/useSchoolData";
 import { useTeacherData } from "./hooks/useTeacherData";
 import { useSettings } from "./hooks/useSettings";
+import { useDatabase } from "./hooks/useDatabase";
 import Registration from "./pages/Registration";
 import StudentManagement from "./pages/StudentManagement";
 import ClassManagement from "./pages/ClassManagement";
@@ -24,6 +25,9 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
+  // Initialiser la base de données
+  useDatabase();
+  
   const schoolData = useSchoolData();
   const teacherData = useTeacherData();
   const { settings } = useSettings();
