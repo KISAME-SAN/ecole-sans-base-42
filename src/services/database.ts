@@ -1,16 +1,11 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import initSqlJs, { Database } from 'sql.js';
 
 class DatabaseService {
-  private db: Database.Database;
+  private db: Database | null = null;
   private static instance: DatabaseService;
+  private isInitialized = false;
 
-  private constructor() {
-    // Créer le fichier de base de données dans le dossier de l'application
-    const dbPath = path.join(process.cwd(), 'ecole-sans-base.db');
-    this.db = new Database(dbPath);
-    this.initializeTables();
-  }
+  private constructor() {}
 
   public static getInstance(): DatabaseService {
     if (!DatabaseService.instance) {
@@ -19,7 +14,36 @@ class DatabaseService {
     return DatabaseService.instance;
   }
 
+  public async initialize(): Promise<void> {
+    if (this.isInitialized) return;
+
+    try {
+      // Charger SQL.js
+      const SQL = await initSqlJs({
+        locateFile: (file: string) => `https://sql.js.org/dist/${file}`
+      });
+
+      // Charger la base de données existante depuis localStorage si elle existe
+      const savedDb = localStorage.getItem('school-database');
+      if (savedDb) {
+        const uint8Array = new Uint8Array(JSON.parse(savedDb));
+        this.db = new SQL.Database(uint8Array);
+      } else {
+        this.db = new SQL.Database();
+        this.initializeTables();
+      }
+
+      this.isInitialized = true;
+      console.log('✅ Base de données initialisée avec succès');
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'initialisation de la base de données:', error);
+      throw error;
+    }
+  }
+
   private initializeTables(): void {
+    if (!this.db) return;
+
     // Table des classes
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS classes (
@@ -216,14 +240,30 @@ class DatabaseService {
       )
     `);
 
-    console.log('✅ Base de données initialisée avec succès');
+    this.saveToLocalStorage();
+  }
+
+  private saveToLocalStorage(): void {
+    if (!this.db) return;
+    
+    try {
+      const data = this.db.export();
+      const dataArray = Array.from(data);
+      localStorage.setItem('school-database', JSON.stringify(dataArray));
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+    }
   }
 
   // Méthodes génériques
   public execute(sql: string, params: any[] = []): any {
+    if (!this.db) throw new Error('Database not initialized');
+    
     try {
       const stmt = this.db.prepare(sql);
-      return stmt.run(...params);
+      const result = stmt.run(params);
+      this.saveToLocalStorage();
+      return result;
     } catch (error) {
       console.error('Erreur lors de l\'exécution SQL:', error);
       throw error;
@@ -231,9 +271,16 @@ class DatabaseService {
   }
 
   public query(sql: string, params: any[] = []): any[] {
+    if (!this.db) throw new Error('Database not initialized');
+    
     try {
       const stmt = this.db.prepare(sql);
-      return stmt.all(...params);
+      const results: any[] = [];
+      while (stmt.step()) {
+        results.push(stmt.getAsObject());
+      }
+      stmt.free();
+      return results;
     } catch (error) {
       console.error('Erreur lors de la requête SQL:', error);
       throw error;
@@ -241,21 +288,21 @@ class DatabaseService {
   }
 
   public queryOne(sql: string, params: any[] = []): any {
-    try {
-      const stmt = this.db.prepare(sql);
-      return stmt.get(...params);
-    } catch (error) {
-      console.error('Erreur lors de la requête SQL:', error);
-      throw error;
-    }
+    const results = this.query(sql, params);
+    return results.length > 0 ? results[0] : null;
   }
 
   public close(): void {
-    this.db.close();
+    if (this.db) {
+      this.db.close();
+      this.db = null;
+    }
   }
 
   // Méthodes pour migrer depuis localStorage
-  public migrateFromLocalStorage(): void {
+  public async migrateFromLocalStorage(): Promise<void> {
+    if (!this.db) return;
+
     try {
       // Migration des classes
       const savedClasses = localStorage.getItem('school-classes');
@@ -332,6 +379,32 @@ class DatabaseService {
       console.log('✅ Migration depuis localStorage terminée');
     } catch (error) {
       console.error('❌ Erreur lors de la migration:', error);
+    }
+  }
+
+  // Méthode pour exporter la base de données
+  public exportDatabase(): Uint8Array | null {
+    if (!this.db) return null;
+    return this.db.export();
+  }
+
+  // Méthode pour importer une base de données
+  public async importDatabase(data: Uint8Array): Promise<void> {
+    try {
+      const SQL = await initSqlJs({
+        locateFile: (file: string) => `https://sql.js.org/dist/${file}`
+      });
+      
+      if (this.db) {
+        this.db.close();
+      }
+      
+      this.db = new SQL.Database(data);
+      this.saveToLocalStorage();
+      console.log('✅ Base de données importée avec succès');
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'importation:', error);
+      throw error;
     }
   }
 }

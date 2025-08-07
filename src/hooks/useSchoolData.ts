@@ -1,20 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Student, SchoolClass, StudentFormData } from '@/types/school';
-import DatabaseService from '@/services/database';
+import { useDatabase } from './useDatabase';
 
 export const useSchoolData = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [nextStudentId, setNextStudentId] = useState(1);
-  const db = DatabaseService.getInstance();
+  const { db, isReady } = useDatabase();
 
   // Charger les données depuis la base de données
   useEffect(() => {
-    loadClassesFromDB();
-    loadStudentsFromDB();
-  }, []);
+    if (isReady) {
+      loadClassesFromDB();
+      loadStudentsFromDB();
+    }
+  }, [isReady]);
 
   const loadClassesFromDB = () => {
+    if (!isReady || !db) return;
+    
     try {
       const classesData = db.query('SELECT * FROM classes ORDER BY name');
       setClasses(classesData);
@@ -24,6 +28,8 @@ export const useSchoolData = () => {
   };
 
   const loadStudentsFromDB = () => {
+    if (!isReady || !db) return;
+    
     try {
       const studentsData = db.query('SELECT * FROM students ORDER BY lastName, firstName');
       setStudents(studentsData);
@@ -39,6 +45,8 @@ export const useSchoolData = () => {
 
   // Class management
   const addClass = (className: string) => {
+    if (!isReady || !db) return '';
+    
     const newClass: SchoolClass = {
       id: Date.now().toString(),
       name: className,
@@ -59,6 +67,8 @@ export const useSchoolData = () => {
   };
 
   const deleteClass = (classId: string) => {
+    if (!isReady || !db) return;
+    
     try {
       db.execute('DELETE FROM classes WHERE id = ?', [classId]);
       setClasses(prev => prev.filter(c => c.id !== classId));
@@ -71,6 +81,8 @@ export const useSchoolData = () => {
 
   // Student management
   const addStudent = (studentData: StudentFormData) => {
+    if (!isReady || !db) return '';
+    
     const newStudent: Student = {
       id: Date.now().toString(),
       autoId: nextStudentId,
@@ -97,6 +109,8 @@ export const useSchoolData = () => {
   };
 
   const updateStudent = (studentId: string, studentData: StudentFormData) => {
+    if (!isReady || !db) return;
+    
     const oldStudent = students.find(s => s.id === studentId);
     
     try {
@@ -121,6 +135,8 @@ export const useSchoolData = () => {
   };
 
   const deleteStudent = (studentId: string) => {
+    if (!isReady || !db) return;
+    
     const student = students.find(s => s.id === studentId);
     
     try {
@@ -137,6 +153,8 @@ export const useSchoolData = () => {
   };
 
   const updateClassStudentCountInDB = (classId: string) => {
+    if (!isReady || !db) return;
+    
     try {
       const count = db.queryOne('SELECT COUNT(*) as count FROM students WHERE classId = ?', [classId]);
       db.execute('UPDATE classes SET studentCount = ? WHERE id = ?', [count.count, classId]);
@@ -150,6 +168,8 @@ export const useSchoolData = () => {
   };
 
   const updateClassName = (classId: string, newName: string) => {
+    if (!isReady || !db) return;
+    
     try {
       db.execute('UPDATE classes SET name = ? WHERE id = ?', [newName, classId]);
       setClasses(prev => prev.map(c => 

@@ -26,7 +26,7 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   // Initialiser la base de données
-  useDatabase();
+  const { isReady } = useDatabase();
   
   const schoolData = useSchoolData();
   const teacherData = useTeacherData();
